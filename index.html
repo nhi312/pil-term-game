@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIL Term Game</title>
+<meta name="description" content="A multiple-choice game for learning Public International Law terms, week by week.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23161616'/%3E%3Crect x='10' y='14' width='44' height='36' rx='3' fill='%23f6f3ea' transform='rotate(-6 32 32)'/%3E%3Ccircle cx='32' cy='32' r='12' fill='none' stroke='%232d6bea' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="desk" id="app" aria-live="off"></div>
+<noscript><p class="noscript">This game needs JavaScript turned on.</p></noscript>
+
+<!-- reusable doodle shapes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="maze" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M0 10h14v14H4v10M20 0v8h12v12H22v10h18M40 20H28M8 40V30h10" fill="none" stroke="#fff" stroke-width="1.6"/>
+    </pattern>
+    <pattern id="waves" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M4 0v8a4 4 0 0 0 8 0V0M16 28v-8a4 4 0 0 1 8 0v8M4 28v-6M24 0v6" fill="none" stroke="#fff" stroke-width="1.6"/>
+    </pattern>
+  </defs>
+</svg>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
