@@ -8,7 +8,7 @@ A multiple-choice game for learning Public International Law, one week at a time
 
 - **Weeks 1, 2, 4, 6, 8, 9, 10**, plus a mixed deck of everything.
 - **261 term drills** (term → meaning, meaning → term, like-I'm-5 → term, slide example → term).
-- **283 hand-written questions** (28–51 per week). Most are cases and scenarios where you decide which term, rule or principle applies, plus true/false, fill in the blank, odd one out, spot the difference and quick facts.
+- **303 hand-written questions** (28–51 per week). Most are cases and scenarios where you decide which term, rule or principle applies, plus true/false, fill in the blank, odd one out, spot the difference and quick facts.
 - **Often wrong**: every question you miss is saved with a tally of how often you missed it. Practise them all or week by week. A question leaves the list after you get it right twice in a row.
 
 ## How to play
