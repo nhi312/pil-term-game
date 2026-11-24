@@ -1,21 +1,29 @@
 # PIL Term Game
 
-A multiple-choice game for learning the terms and definitions from a Public International Law course, one week at a time.
+A multiple-choice game for learning Public International Law, one week at a time.
 
 **Play it:** https://nhi312.github.io/pil-term-game/
 
-## How it works
+## What's in it
 
-- Pick a week (1, 2, 4, 6, 8, 9, 10) or the mixed deck of all 261 terms.
-- Choose a question style: mixed, term → meaning, meaning → term, or "like I'm 5" → term.
-- Choose a round length: 10, 20 or the whole week.
-- After every answer you see the official meaning, the plain-English version and the example from the slides.
-- At the end you get a list of the terms you missed and can retry just those.
-- Keyboard: `1`–`4` to answer, `Enter` for the next question, `Esc` back to the start.
+- **Weeks 1, 2, 4, 6, 8, 9, 10**, plus a mixed deck of everything.
+- **261 term drills** (term → meaning, meaning → term, like-I'm-5 → term, slide example → term).
+- **283 hand-written questions** (28–51 per week). Most are cases and scenarios where you decide which term, rule or principle applies, plus true/false, fill in the blank, odd one out, spot the difference and quick facts.
+- **Often wrong**: every question you miss is saved with a tally of how often you missed it. Practise them all or week by week. A question leaves the list after you get it right twice in a row.
 
-Progress is saved in your browser only.
+## How to play
+
+- Pick a week or the mixed deck.
+- Question style: **Mix it up** (two case/scenario questions for every term drill), **Cases & scenarios only**, or one of the term-drill styles.
+- Round length: 10, 20 or the whole week.
+- After every answer you get the answer, the reason, a like-I'm-5 note and the slide reference.
+- Keyboard: `1`–`4` to answer, `Enter` for next, `Esc` back to the start.
+
+Progress and the Often wrong list are saved in your browser only.
 
 ## Files
 
 - `index.html`, `styles.css`, `app.js`: the game (no build step)
-- `data.js`: the term bank, one list per week (`t` term, `m` official meaning, `e` like-I'm-5 explanation, `x` slide example)
+- `data.js`: term bank (`t` term, `m` official meaning, `e` like-I'm-5, `x` slide example)
+- `questions.js`, `cases.js`: hand-written questions (`k` kind, `q` question, `o` options, `a` answer index, `why`, `eli`, `ref`)
+- `fixes.js`: rebalanced answer options so the right answer isn't simply the longest
