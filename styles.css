@@ -272,6 +272,7 @@ button{font:inherit; color:inherit}
 .qcard .ask .kind{display:inline-block; margin-left:10px; font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.6px; text-transform:uppercase; color:var(--ink-soft); border:1px solid var(--rule); border-radius:999px; padding:2px 8px; vertical-align:3px}
 .options.two{grid-template-columns:1fr 1fr; max-width:420px}
 .wnote{font-size:21px; margin:-2px 0 8px; line-height:1.1}
+.feedback .swap{font-size:14px; line-height:1.45; margin:-2px 0 10px; padding:6px 10px; background:#fdecea; border-left:3px solid var(--red)}
 .rnote{font-size:22px; padding:16px 28px 0; margin:0}
 .review li span + span{margin-top:3px}
 

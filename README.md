@@ -7,14 +7,14 @@ A multiple-choice game for learning Public International Law, one week at a time
 ## What's in it
 
 - **Weeks 1, 2, 4, 6, 8, 9, 10**, plus a mixed deck of everything.
-- **261 term drills** (term → meaning, meaning → term, like-I'm-5 → term, slide example → term).
+- **261 terms from Weeks 1–10** (154 of them from Weeks 1–8). Each time a term comes up it is asked in one of eight forms: term → meaning, meaning → term, like-I'm-5 → term, slide example → term, term → like-I'm-5, term → slide example, true/false (sometimes with another term's meaning swapped in) and matching pairs.
 - **303 hand-written questions** (28–51 per week). Most are cases and scenarios where you decide which term, rule or principle applies, plus true/false, fill in the blank, odd one out, spot the difference and quick facts.
 - **Often wrong**: every question you miss is saved with a tally of how often you missed it. Practise them all or week by week. A question leaves the list after you get it right twice in a row.
 
 ## How to play
 
 - Pick a week or the mixed deck.
-- Question style: **Mix it up** (two case/scenario questions for every term drill), **Cases & scenarios only**, or one of the term-drill styles.
+- Question style: **Mix it up** (alternates hand-written questions with term questions), **Cases & scenarios**, or **Terms, 8 forms**.
 - Round length: 10, 20 or the whole week.
 - After every answer you get the answer, the reason, a like-I'm-5 note and the slide reference.
 - Keyboard: `1`–`4` to answer, `Enter` for next, `Esc` back to the start.

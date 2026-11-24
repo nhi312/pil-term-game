@@ -32,6 +32,7 @@
     set: function (k, v) { try { localStorage.setItem("pilgame:" + k, JSON.stringify(v)); } catch (e) {} }
   };
   var settings = store.get("settings", { mode: "mix", len: 10 });
+  if (["t2m", "m2t", "e2t"].indexOf(settings.mode) !== -1) settings.mode = "terms"; // older single-form modes
   var stats = store.get("stats", {});
   stats.answered = stats.answered || 0; stats.correct = stats.correct || 0;
   stats.bestStreak = stats.bestStreak || 0; stats.best = stats.best || {}; stats.miss = stats.miss || {};
@@ -98,6 +99,10 @@
     m2t: "Which term matches this meaning?",
     e2t: "Explained like I'm 5. Which term is it?",
     x2t: "Slide example. Which term does it illustrate?",
+    t2e: "Which plain-English version fits this term?",
+    t2x: "Which slide example goes with this term?",
+    ttf: "True or false?",
+    pair: "Only one pair is matched correctly. Which?",
     scenario: "Apply it. What's the answer?",
     tf: "True or false?",
     fill: "Fill in the blank.",
@@ -106,47 +111,74 @@
     compare: "Spot the difference.",
     fact: "Quick fact."
   };
-  var TERM_MODES = { t2m: 1, m2t: 1, e2t: 1 };
+  var FORM_LABEL = { t2m: "term → meaning", m2t: "meaning → term", e2t: "like I'm 5 → term", x2t: "example → term", t2e: "term → like I'm 5", t2x: "term → example", ttf: "true / false", pair: "matching pair" };
+  // Every term is asked in one of eight forms, picked at random each time it comes up.
+  var TERM_FORMS = ["t2m", "m2t", "e2t", "x2t", "t2e", "t2x", "ttf", "pair"];
+  function goodExample(x) { return x.length >= 6 && !/^s\.\s?\d/i.test(x) && !/^(Challenge|Week|Art\. 4 list)/.test(x); }
   function valid(type, it) {
-    if (type === "t2m") return true;
+    if (type === "t2m" || type === "ttf" || type === "pair") return true;
     if (type === "m2t") return low(it.m).indexOf(low(it.t)) === -1;
     if (type === "e2t") return it.e.length > 6 && low(it.e).indexOf(low(it.t)) === -1;
-    if (type === "x2t") return it.x.length >= 6 && !/^s\.\s?\d/i.test(it.x) && !/^(Challenge|Week|Art\. 4 list)/.test(it.x) && low(it.x).indexOf(low(it.t)) === -1;
+    if (type === "t2e") return it.e.length > 6 && low(it.e).indexOf(low(it.t)) === -1;
+    if (type === "x2t" || type === "t2x") return goodExample(it.x) && low(it.x).indexOf(low(it.t)) === -1;
     return false;
   }
   function pickType(it) {
-    if (TERM_MODES[settings.mode]) return valid(settings.mode, it) ? settings.mode : "t2m";
-    var bag = ["t2m", "m2t", "m2t", "e2t", "x2t", "x2t", "x2t"].filter(function (t) { return valid(t, it); });
+    var bag = TERM_FORMS.filter(function (t) { return valid(t, it); });
     return bag[Math.floor(Math.random() * bag.length)];
+  }
+  // Other terms to draw wrong answers from: same week first, topped up from other weeks if the week is small.
+  function poolFor(it, keep) {
+    var pool = shuffle(TERMS[it.w].filter(function (o) { return o.id !== it.id && (!keep || keep(o)); }));
+    if (pool.length < 6) pool = pool.concat(shuffle(ALL_TERMS.filter(function (o) { return o.w !== it.w && (!keep || keep(o)); })).slice(0, 12));
+    return pool;
+  }
+  function distractors(it, field, n, keep) {
+    var correct = it[field], seen = {}, cands = [];
+    seen[low(correct)] = 1;
+    poolFor(it, keep).forEach(function (o) {
+      if (cands.length < 10 && !seen[low(o[field])]) { seen[low(o[field])] = 1; cands.push(o[field]); }
+    });
+    cands.sort(function (a, b) { return Math.abs(a.length - correct.length) - Math.abs(b.length - correct.length); });
+    return cands.slice(0, n);
   }
   function makeQuestion(it) {
     if (it.kind === "q") {
       var opts0 = it.k === "tf" ? it.o.slice() : shuffle(it.o);
       return { item: it, type: it.k, prompt: it.q, options: opts0, answer: opts0.indexOf(it.o[it.a]) };
     }
-    var type = pickType(it);
-    var field = type === "t2m" ? "m" : "t";
-    var correct = it[field];
-    var seen = {}; seen[low(correct)] = 1;
-    var pool = shuffle(TERMS[it.w].filter(function (o) { return o.id !== it.id; }));
-    if (pool.length < 6) pool = pool.concat(shuffle(ALL_TERMS.filter(function (o) { return o.w !== it.w; })).slice(0, 12));
-    var cands = [];
-    for (var i = 0; i < pool.length && cands.length < 10; i++) {
-      var v = pool[i][field];
-      if (!seen[low(v)]) { seen[low(v)] = 1; cands.push(v); }
+    var type = pickType(it), opts, correct;
+    if (type === "ttf") {
+      // Half the time show the right meaning, half the time a meaning that belongs to another term.
+      var swap = Math.random() < 0.5 ? poolFor(it).filter(function (o) { return low(o.m) !== low(it.m); })[0] : null;
+      return { item: it, type: type, prompt: "“" + it.t + "” means: " + (swap ? swap.m : it.m), options: ["True", "False"], answer: swap ? 1 : 0, swappedFrom: swap };
     }
-    cands.sort(function (a, b) { return Math.abs(a.length - correct.length) - Math.abs(b.length - correct.length); });
-    var opts = shuffle([correct].concat(cands.slice(0, 3)));
-    return { item: it, type: type, prompt: it[type === "t2m" ? "t" : type === "m2t" ? "m" : type === "e2t" ? "e" : "x"], options: opts, answer: opts.indexOf(correct) };
+    if (type === "pair") {
+      var others = poolFor(it, function (o) { return o.e.length > 6; }).slice(0, 6);
+      var wrong = [];
+      for (var i = 0; i < others.length && wrong.length < 3; i++) {
+        var a = others[i], b = others[(i + 1) % others.length];
+        if (low(b.e) !== low(a.e) && low(b.e) !== low(it.e)) wrong.push(a.t + "  →  " + b.e);
+      }
+      correct = it.t + "  →  " + it.e;
+      opts = shuffle([correct].concat(wrong.slice(0, 3)));
+      return { item: it, type: type, prompt: "Match each term with its plain-English meaning.", options: opts, answer: opts.indexOf(correct) };
+    }
+    var field = { t2m: "m", m2t: "t", e2t: "t", x2t: "t", t2e: "e", t2x: "x" }[type];
+    var promptField = { t2m: "t", m2t: "m", e2t: "e", x2t: "x", t2e: "t", t2x: "t" }[type];
+    var keep = type === "t2e" ? function (o) { return o.e.length > 6; } : type === "t2x" ? function (o) { return goodExample(o.x); } : null;
+    correct = it[field];
+    opts = shuffle([correct].concat(distractors(it, field, 3, keep)));
+    return { item: it, type: type, prompt: it[promptField], options: opts, answer: opts.indexOf(correct) };
   }
 
   /* ---------- Decks ---------- */
-  // Interleave: two case/scenario-style questions for every term drill, so rounds lean towards application.
+  // "Mix it up" alternates a hand-written case/scenario question with a term question (itself in one of eight forms).
   function weave(qs, ts) {
     qs = shuffle(qs); ts = shuffle(ts);
     var out = [], i = 0;
     while (qs.length || ts.length) {
-      var takeQ = qs.length && (!ts.length || i % 3 !== 2);
+      var takeQ = qs.length && (!ts.length || i % 2 === 0);
       out.push(takeQ ? qs.shift() : ts.shift()); i++;
     }
     return out;
@@ -154,7 +186,7 @@
   function deckFor(weeks) {
     var ts = [].concat.apply([], weeks.map(function (w) { return TERMS[w]; }));
     var qs = [].concat.apply([], weeks.map(function (w) { return QS[w]; }));
-    if (TERM_MODES[settings.mode]) return shuffle(ts);
+    if (settings.mode === "terms") return shuffle(ts);
     if (settings.mode === "apply") return shuffle(qs);
     return weave(qs, ts);
   }
@@ -238,7 +270,7 @@
         '<section class="brief paper white holes tilt-l" aria-labelledby="title">' +
           '<div class="sticky"><span class="big">FINAL</span>' + SVG.uline + '<span class="small">exam prep</span></div>' +
           '<h1 class="display" id="title">Public International Law<span class="blue">Term Game</span></h1>' +
-          '<p class="lede">Terms, scenarios, true-or-false, fill-in-the-blank, case checks and more, one week at a time. Every answer comes with the official meaning, a plain-English version and the slide it came from.</p>' +
+          '<p class="lede">Cases, scenarios and every term from Weeks 1–10, each asked in several forms, one week at a time. Every answer comes with the official meaning, a plain-English version and the slide it came from.</p>' +
           '<ul class="week-list">' + weeksHtml + "</ul>" +
         "</section>" +
 
@@ -263,7 +295,7 @@
           '<aside class="doodle-card tilt-xl">' +
             '<span class="mono" style="color:#9d988d">PIL · Weeks 1–10</span>' +
             '<span class="hand">pick a week, circle the right answer</span>' +
-            "<p>Seven kinds of question: scenarios, true or false, fill in the blank, odd one out, case checks, spot the difference and quick facts, plus the term drills.</p>" +
+            "<p>Cases, scenarios, true or false, fill in the blank, odd one out, spot the difference and quick facts. Every term also comes up in eight forms, from matching pairs to slide examples.</p>" +
             '<div class="doodle-grid" aria-hidden="true">' + SVG.doodles.join("") + "</div>" +
             '<div class="blocks" aria-hidden="true"><div class="g">' + SVG.blockG + '</div><div class="b">' + SVG.blockB + '</div><div class="o">' + SVG.blockO + "</div></div>" +
           "</aside>" +
@@ -271,7 +303,7 @@
 
         '<section class="settings paper tilt-r" aria-label="Game settings">' +
           '<div class="setting"><h3>Question style</h3><div class="chips">' +
-            chip("mode", "mix", "Mix it up") + chip("mode", "apply", "Cases & scenarios only") + chip("mode", "t2m", "Term → meaning") + chip("mode", "m2t", "Meaning → term") + chip("mode", "e2t", "Like I'm 5 → term") +
+            chip("mode", "mix", "Mix it up") + chip("mode", "apply", "Cases & scenarios") + chip("mode", "terms", "Terms, 8 forms") +
           "</div></div>" +
           '<div class="setting"><h3>Round length</h3><div class="chips">' +
             chip("len", 10, "10 questions") + chip("len", 20, "20 questions") + chip("len", "all", "Whole week") +
@@ -324,7 +356,7 @@
     document.title = "Question " + n + " of " + total + " · PIL Term Game";
     var answered = game.picked !== null;
     var ok = answered && game.picked === q.answer;
-    var promptLong = !(it.kind === "term" && q.type === "t2m");
+    var promptLong = !(it.kind === "term" && (q.type === "t2m" || q.type === "t2e" || q.type === "t2x"));
 
     var dots = game.deck.map(function (_, i) {
       var cls = i < game.results.length ? (game.results[i].ok ? "ok" : "no") : (i === game.i ? "now" : "");
@@ -349,6 +381,7 @@
       if (it.kind === "term") {
         body =
           '<p class="term">' + esc(it.t) + "</p>" +
+          (q.swappedFrom ? '<p class="swap">The meaning shown belongs to <b>' + esc(q.swappedFrom.t) + "</b>.</p>" : "") +
           '<span class="label">Official meaning</span><p class="def">' + esc(it.m) + "</p>" +
           '<div class="eli">' + SVG.heart + '<span class="label">Like I\'m 5</span><p>' + esc(it.e) + "</p></div>" +
           '<span class="label">From the slides</span><p class="ex">' + esc(it.x) + "</p>";
@@ -380,7 +413,7 @@
         (answered ? "" : '<p class="hint">Keys: <kbd>1</kbd>–<kbd>' + q.options.length + "</kbd> to answer, <kbd>Enter</kbd> for next, <kbd>Esc</kbd> back to the desk.</p>") +
       "</div>";
 
-    var kindTag = it.kind === "q" ? '<span class="kind">' + esc(it.k === "tf" ? "true / false" : it.k === "not" ? "odd one out" : it.k) + "</span>" : '<span class="kind">term drill</span>';
+    var kindTag = it.kind === "q" ? '<span class="kind">' + esc(it.k === "tf" ? "true / false" : it.k === "not" ? "odd one out" : it.k) + "</span>" : '<span class="kind">term · ' + esc(FORM_LABEL[q.type] || "drill") + "</span>";
 
     app.innerHTML =
       '<div class="quiz">' +
